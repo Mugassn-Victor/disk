@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>GitHub 云盘（纯前端版）</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root {
+            --primary: #0d8aff;
+            --primary-dark: #0060d3;
+            --bg: #f4f7fb;
+            --card-bg: #ffffff;
+            --border: #e0e6f0;
+            --text-main: #1f2430;
+            --text-sub: #6b7280;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+            Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0d8aff, #2a6fff);
+            color: #fff;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header-title .logo-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+        }
+
+        .header-sub {
+            font-size: 12px;
+            opacity: 0.85;
+        }
+
+        .header-user {
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.16);
+            border-radius: 999px;
+            padding: 2px 10px;
+            font-size: 11px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            background: #fff;
+            color: var(--primary);
+            transition: all .15s ease;
+            margin-right: 4px;
+        }
+
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-danger { background: #f43f5e; color: #fff; }
+
+        .btn:hover {
+            opacity: 0.9;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: default;
+            box-shadow: none;
+        }
+
+        .layout {
+            max-width: 1100px;
+            margin: 24px auto 40px;
+            padding: 0 16px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+            padding: 18px 20px 22px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-bottom: 12px;
+        }
+
+        .form-group { margin-bottom: 12px; }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-bottom: 4px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(13, 138, 255, 0.15);
+        }
+
+        .text-muted {
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        .error-message {
+            color: #f43f5e;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .success-message {
+            color: #16a34a;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .card-title-box {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .toolbar-text {
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-right: 4px;
+        }
+
+        .progress-wrapper {
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+
+        .progress-text {
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-bottom: 4px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            border-radius: 999px;
+            background: #e5edff;
+            overflow: hidden;
+        }
+
+        .progress-bar-inner {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            transition: width .15s ease;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .breadcrumb-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-sub);
+        }
+
+        .link {
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        .table-wrapper {
+            max-height: 60vh;
+            overflow: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #fff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid #eef1f7;
+        }
+
+        th {
+            background: #f4f7ff;
+            color: #4b5563;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tbody tr:hover { background: #f9fbff; }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 11px;
+            background: #ecfdf3;
+            color: #16a34a;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+        }
+
+        .empty-tip {
+            padding: 16px;
+            text-align: center;
+            color: var(--text-sub);
+            font-size: 13px;
+        }
+
+        .row-folder { cursor: pointer; }
+        .row-folder td:first-child { font-weight: 600; }
+
+        .ops-col {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 800px) {
+            .card-header-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .toolbar {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="header-title">
+        <div class="logo-dot"></div>
+        <span>GitHub 云盘</span>
+        <span class="header-sub">· 纯前端多用户内网版</span>
+    </div>
+    <div class="header-user" id="header-user" style="display:none;">
+        <span id="header-username"></span>
+        <span class="badge" id="header-tag"></span>
+        <button class="btn" id="btn-logout">退出</button>
+    </div>
+</div>
+
+<div class="layout">
+
+    <!-- 登录卡片 -->
+    <div class="card" id="auth-card" style="display:none;">
+        <div class="card-title">登录到云盘</div>
+        <div class="card-subtitle">多用户全在前端区分，每个用户名对应一个 Release。</div>
+
+        <div id="auth-message"></div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label>用户名（建议用公司邮箱或工号）</label>
+                <input type="text" name="username" required placeholder="例如：nji894501@163.com">
+            </div>
+            <div class="text-muted">
+                说明：这是前端逻辑上的用户，用于区分不同人的 Release，并不是 GitHub 帐号密码。
+            </div>
+            <br>
+            <button class="btn btn-primary" type="submit">进入我的网盘</button>
+        </form>
+    </div>
+
+    <!-- 网盘主界面 -->
+    <div class="card" id="disk-card" style="display:none;">
+        <div class="card-header-row">
+            <div class="card-title-box">
+                <div class="card-title">我的文件</div>
+                <div class="card-subtitle" id="session-info">正在初始化...</div>
+            </div>
+            <div class="toolbar">
+                <span class="toolbar-text" id="upload-target">上传目录：/</span>
+                <button class="btn" type="button" id="btn-new-folder">新建文件夹</button>
+                <input type="file" id="file-input" name="file" multiple style="display:none;">
+                <button class="btn btn-primary" type="button" id="btn-upload-file">上传文件</button>
+                <button class="btn" id="btn-refresh" type="button">刷新</button>
+            </div>
+        </div>
+
+        <div class="progress-wrapper" id="upload-progress" style="display:none;">
+            <div class="progress-text" id="progress-text">正在上传...</div>
+            <div class="progress-bar">
+                <div class="progress-bar-inner" id="progress-bar-inner"></div>
+            </div>
+        </div>
+
+        <div class="list-header">
+            <div class="breadcrumb-left">
+                <span id="breadcrumb-text">当前位置：/</span>
+                <span id="breadcrumb-back" class="link" style="display:none;">返回上一级</span>
+            </div>
+            <div class="text-muted" style="font-size:12px;">
+                文件夹分享链接示例：
+                <code style="background:#f3f4ff;padding:2px 6px;border-radius:4px;">?share=1&amp;u=你的tag&amp;f=aaa/bbb</code>
+            </div>
+        </div>
+
+        <div class="table-wrapper" id="table-wrapper">
+            <div class="empty-tip" id="empty-tip" style="display:none;">此目录下暂无文件。</div>
+            <table id="file-table" style="display:none;">
+                <thead>
+                <tr>
+                    <th>文件名 / 文件夹</th>
+                    <th>大小</th>
+                    <th>下载</th>
+                    <th class="ops-col">操作</th>
+                </tr>
+                </thead>
+                <tbody id="file-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 分享模式卡片 -->
+    <div class="card" id="share-card" style="display:none;">
+        <div class="card-title" id="share-title">文件夹分享</div>
+        <div class="card-subtitle" id="share-subtitle"></div>
+
+        <div id="share-ops" style="display:none;">
+            <button class="btn btn-primary" id="share-download-all">下载全部</button>
+            <button class="btn" id="share-copy-all">复制所有直链</button>
+            <div class="text-muted" style="margin-top:6px;font-size:12px;">
+                浏览器可能会拦截多文件自动下载，弹出提示时请选择“允许”。
+            </div>
+        </div>
+
+        <div class="table-wrapper" style="margin-top:12px;">
+            <div class="empty-tip" id="share-empty" style="display:none;">该文件夹下暂无文件。</div>
+            <table id="share-table" style="display:none;">
+                <thead>
+                <tr>
+                    <th>文件名</th>
+                    <th style="width:150px;">操作</th>
+                </tr>
+                </thead>
+                <tbody id="share-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- 引入分离的 JS 文件 -->
+<script src="app.js"></script>
+</body>
+</html>
