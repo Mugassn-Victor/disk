@@ -1,5 +1,6 @@
 /*******************  配置区（必改）  *******************/
 // TODO: 在这里填你的 GitHub Token / 仓库信息
+// 注意：这是在前端暴露的，只适合公司内网／你信任的环境
 const GITHUB_TOKEN = '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';
 const GITHUB_OWNER = 'file-mugassn';
 const GITHUB_REPO  = 'file';
@@ -136,10 +137,12 @@ function decodeFolderPath(folderEnc) {
 // 通用 GitHub API 请求
 async function githubRequest(method, url, body, extraHeaders) {
     const headers = Object.assign({
-        'Authorization': 'Bearer ' + GITHUB_TOKEN,
-        'Accept': 'application/vnd.github+json',
-        'User-Agent': 'Internal-GitHub-Drive'
+        // 用 token 而不是 Bearer，兼容经典 PAT
+        'Authorization': 'token ' + GITHUB_TOKEN,
+        'Accept': 'application/vnd.github+json'
     }, extraHeaders || {});
+
+    console.log('[GitHubRequest]', method, url);
 
     const res = await fetch(url, {
         method,
@@ -150,6 +153,10 @@ async function githubRequest(method, url, body, extraHeaders) {
     const text = await res.text();
     let json = null;
     try { json = text ? JSON.parse(text) : null; } catch (e) {}
+
+    if (res.status === 401) {
+        console.error('GitHub 401 未授权，响应：', text || json);
+    }
 
     return { status: res.status, data: json, text };
 }
@@ -755,9 +762,8 @@ async function downloadBigFile(tag, groupId, originalName) {
 async function fetchAssetBlob(assetId) {
     const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/assets/${assetId}`;
     const headers = {
-        'Authorization': 'Bearer ' + GITHUB_TOKEN,
-        'Accept': 'application/octet-stream',
-        'User-Agent': 'Internal-GitHub-Drive'
+        'Authorization': 'token ' + GITHUB_TOKEN,
+        'Accept': 'application/octet-stream'
     };
     const res = await fetch(url, { method: 'GET', headers });
     if (!res.ok) {
@@ -839,7 +845,7 @@ function uploadWholeFile(file, folder, fileIndex, fileTotal) {
 
             const xhr = new XMLHttpRequest();
             xhr.open('POST', url);
-            xhr.setRequestHeader('Authorization', 'Bearer ' + GITHUB_TOKEN);
+            xhr.setRequestHeader('Authorization', 'token ' + GITHUB_TOKEN);
             xhr.setRequestHeader('Accept', 'application/vnd.github+json');
             xhr.setRequestHeader('Content-Type', 'application/octet-stream');
 
@@ -908,7 +914,7 @@ function uploadOneChunk(blob, meta, fileIndex, fileTotal) {
 
             const xhr = new XMLHttpRequest();
             xhr.open('POST', url);
-            xhr.setRequestHeader('Authorization', 'Bearer ' + GITHUB_TOKEN);
+            xhr.setRequestHeader('Authorization', 'token ' + GITHUB_TOKEN);
             xhr.setRequestHeader('Accept', 'application/vnd.github+json');
             xhr.setRequestHeader('Content-Type', 'application/octet-stream');
 
@@ -1042,7 +1048,6 @@ async function initShareMode(params) {
 
         Object.keys(bigGroups).forEach(gid => {
             const info = bigGroups[gid];
-            const partIndices = Object.keys(info.parts).map(i=>parseInt(i,10)).sort((a,b)=>a-b);
             files.push({
                 name: info.original_name + ' (大文件)',
                 url: '',
