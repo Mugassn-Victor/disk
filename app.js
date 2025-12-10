@@ -1,8 +1,9 @@
 /*******************  配置区（必改）  *******************/
-// TODO: 在这里填你的 GitHub Token / 仓库信息
-// 注意：这是在前端暴露的，只适合公司内网／你信任的环境
+// 这里填「新的」 GitHub PAT（classic，ghp_开头）
 const GITHUB_TOKEN = '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';
+// 你的 GitHub 用户名
 const GITHUB_OWNER = 'file-mugassn';
+// 你的仓库名
 const GITHUB_REPO  = 'file';
 /*******************************************************/
 
@@ -137,8 +138,7 @@ function decodeFolderPath(folderEnc) {
 // 通用 GitHub API 请求
 async function githubRequest(method, url, body, extraHeaders) {
     const headers = Object.assign({
-        // 用 token 而不是 Bearer，兼容经典 PAT
-        'Authorization': 'token ' + GITHUB_TOKEN,
+        'Authorization': 'token ' + GITHUB_TOKEN,  // classic PAT 用 token
         'Accept': 'application/vnd.github+json'
     }, extraHeaders || {});
 
